@@ -1,12 +1,29 @@
-from time import time
+#-------------------------------------------------------------------------------
+# Name:         camera.py
+# Purpose:      Raspi4 + USBcam
+#
+# Author:       fuji244tys
+#
+# Created:      2021/10/22
+# Copyright:    (c) fujio 2021
+#-------------------------------------------------------------------------------
+import cv2
 
-
-class Camera(object):
-    """An emulated camera implementation that streams a repeated sequence of
-    files 1.jpg, 2.jpg and 3.jpg at a rate of one frame per second."""
-
+class VideoCamera(object):
     def __init__(self):
-        self.frames = [open(f + '.jpg', 'rb').read() for f in ['1', '2', '3']]
+        self.video = cv2.VideoCapture(-1)
+
+        # (-1)はRaspiにつながったカメラを探します
+
+    def __del__(self):
+        self.video.release()
 
     def get_frame(self):
-        return self.frames[int(time()) % 3]
+        success, image = self.video.read()
+        ret, jpeg = cv2.imencode('.jpg', image)
+        return jpeg.tobytes()
+
+        # read()は、二つの値を返すので、success, imageの2つ変数で受けています。
+        # OpencVはデフォルトでは raw imagesなので JPEGに変換
+        # ファイルに保存する場合はimwriteを使用、メモリ上に格納したい時はimencodeを使用
+        # cv2.imencode() は numpy.ndarray() を返すので .tobytes() で bytes 型に変換
